@@ -9,8 +9,6 @@ from pydantic import BaseModel, validator, Field, HttpUrl, EmailStr
 class SimplyUser(BaseModel):
     # id: int | None
     username: str | None
-    # first_name: str | None
-    # last_name: str | None
     email: EmailStr | None
 
     class Config:
@@ -42,7 +40,7 @@ class UserProfilePic(SimplyUser):
 
 # basic schema for chats
 class MessageChat(BaseModel):
-    # id: int | None
+    id: int | None
     other: Optional[SimplyUser | None] = Field(..., alias="receiver")
     message: str | None
     sent_date: datetime | None
@@ -53,9 +51,17 @@ class MessageChat(BaseModel):
         allow_population_by_field_name = True
 
 
+class MessageChatWithSender(MessageChat):
+    user: Optional[SimplyUser | None] = Field(..., alias="sender")
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
+
 # basic schema for mails
 class MessageMail(BaseModel):
-    # id: int | None
+    id: int | None
     subject: str | None
     content: str | None
     sent_date: datetime | date | None
@@ -83,7 +89,7 @@ class MessageMailSending(BaseModel):
 
 # basic schema for likes/dislike of socks
 class SockLikes(BaseModel):
-    # id: int | None
+    id: int | None
     sock: SimplySock | None
     like: SimplySock | None
     dislike: SimplySock | None
@@ -162,11 +168,11 @@ class CreateUpdateSock(BaseModel):
 
 # basic schema for user matches
 class UserMatch(BaseModel):
-    # id: int | None
+    id: int | None
     # user: Optional[SimplyTheUser]
-    other: Optional[SimplyUser] = Field(..., alias="matched_with")
+    other: Optional[SimplyUser | None] = Field(..., alias="matched_with")
     unmatched: bool | None
-    chatroom_uuid: UUID
+    chatroom_uuid: UUID | None
 
     class Config:
         orm_mode = True

@@ -1,13 +1,7 @@
-import os
 from sqlalchemy.orm import Session
-from sqlalchemy import exc, or_
-from ..database import models, schemas
-from fastapi import HTTPException, status, UploadFile, BackgroundTasks
-from fastapi.responses import JSONResponse
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from ..authentication.hashing import Hash
-from datetime import datetime
-from cloudinary import api, uploader
+from ..database import models
+from fastapi import HTTPException, status, UploadFile
+from cloudinary import uploader
 
 
 ##
@@ -52,7 +46,7 @@ def create_sock_pic(username: str, id: int, file: UploadFile, db: Session):
     db.refresh(current_sock)
 
     # return latest picture
-    return user.profile_pictures[-1]
+    return current_sock.profile_pictures[-1]
 
 
 def delete_sock_pic(username: str, sock_id: int, pic_id: int, db: Session):

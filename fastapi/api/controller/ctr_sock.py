@@ -1,11 +1,17 @@
 from sqlalchemy.orm import Session
 from ..database import models, schemas
 from fastapi import HTTPException, status
-from ..authentication.hashing import Hash
 
 
-def show_all(db: Session):
-    sock = db.query(models.Sock).all()
+def show_all(username: str, db: Session):
+    user = db.query(models.User).filter(models.User.username == username).first()
+    sock = (
+        db.query(models.Sock)
+        .filter(
+            models.Sock.user_id == user.id,
+        )
+        .all()
+    )
     if not sock:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -63,7 +63,13 @@ class SwipeView(HotSoxLogInAndValidationCheckMixin, TemplateView):
             )
             # get all socks related to the current user (queryset)
             user_socks = Sock.objects.filter(user=request.user)
-            context = {"sock": sock, "user_socks": user_socks}
+            if sock:
+                context = {
+                    "sock": sock.serialize_attributes(),
+                    "user_socks": user_socks,
+                }
+            else:
+                context = {"sock": None, "user_socks": user_socks}
             return render(request, "app_home/swipe.html", context)
         # fail back route
         return redirect(reverse("app_users:sock-overview"))
@@ -91,7 +97,7 @@ class SwipeView(HotSoxLogInAndValidationCheckMixin, TemplateView):
         # frontend liked the sock
         if request.POST.get("decision", None) == "like":
             # we use get_or_create to beware of duplicates!
-            tobedelete, sock_like_created = SockLike.objects.get_or_create(
+            _, sock_like_created = SockLike.objects.get_or_create(
                 sock=current_user_sock, like=sock_to_be_decided_on
             )
 
@@ -118,8 +124,18 @@ class SwipeView(HotSoxLogInAndValidationCheckMixin, TemplateView):
                 if user_match_created:
                     # sending match email
                     match_message = "Please visit HotSox to check your new match:)"
-                    celery_send_mail.delay(email_subject=f"You have a match with {sock_to_be_decided_on.user.username}", email_message=match_message, recipient_list=[current_user_sock.user.email], notification=current_user_sock.user.notification)
-                    celery_send_mail.delay(email_subject=f"You have a match with {current_user_sock.user.username}", email_message=match_message, recipient_list=[sock_to_be_decided_on.user.email], notification=sock_to_be_decided_on.user.notification)
+                    celery_send_mail.delay(
+                        email_subject=f"You have a match with {sock_to_be_decided_on.user.username}",
+                        email_message=match_message,
+                        recipient_list=[current_user_sock.user.email],
+                        notification=current_user_sock.user.notification,
+                    )
+                    celery_send_mail.delay(
+                        email_subject=f"You have a match with {current_user_sock.user.username}",
+                        email_message=match_message,
+                        recipient_list=[sock_to_be_decided_on.user.email],
+                        notification=sock_to_be_decided_on.user.notification,
+                    )
 
                     context = {
                         "user": current_user_sock.user,
